@@ -1,9 +1,31 @@
 // set the dimensions and margins of the graph
 var dataLength = 3;
 const dataRange = 5;
-const xLabels = ['Emotional Fulfillment', 'Job Satisifaction', 'Flexibility'];
+const xLabels = ['Emotional Fulfillment', 'Job Satisfaction', 'Flexibility'];
 const yLabels = [undefined, 1, 2, 3, 4, 5, undefined];
-const datum = [{ values: [1, 2, 3], dotted: false, lineColor: '#ff9800' }];
+const datum = [
+  {
+    type: 'fa-star',
+    values: [5, 4, 4],
+    dotted: true,
+    color: '#ffd600',
+    lineColor: '#969696',
+  },
+  {
+    type: 'fa-heart',
+    values: [3, 5, 4],
+    dotted: false,
+    color: '#ea5e5e',
+    lineColor: '#98e6ff',
+  },
+  {
+    type: 'fa-rocket',
+    values: [3, 2, 4],
+    dotted: true,
+    color: '#4ecb71',
+    lineColor: '#ffbf75',
+  },
+];
 const margin = { top: 20, right: 30, bottom: 80, left: 30 };
 const deltaY = document.getElementById('chart_area').offsetTop + margin.top;
 const deltaWidth = 200;
@@ -54,14 +76,14 @@ function drawXLabels(_labels, _xLabels, _height) {
       .attr('width', 140)
       .attr('height', 100)
       .html(
-        `<div style="height:100%;width:100%;padding:5px;box-sizing:border-box;">
+        `<div style="height:100%;width:100%;padding:5px;">
           <div style="text-align:center">
             <div style="text-align:center;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${xLabel}</div>
             <i class="fa-solid fa-pen column-button" onclick="enableColumnUpdate(this)"></i>
             <i class="fa-solid fa-trash-can column-button" onclick="removeColumn(${index})"></i>
           </div>
           <div style="text-align:center;display:none;">
-            <input style="text-align:center;width:100%;box-sizing:border-box;outline:none;border:none;border-bottom:1px solid black;" value="${xLabel}" />
+            <input style="text-align:center;width:100%;outline:none;border:none;border-bottom:1px solid black;" value="${xLabel}" />
             <i class="fa-solid fa-check column-button" onclick="updateColumnName(this, ${index})"></i>
           </div>
         </div>`
@@ -132,7 +154,7 @@ function drawCoordinate(
       .attr('width', 40)
       .attr('height', 30)
       .html(
-        `<div style="height:100%;width:100%;padding:5px;box-sizing:border-box;text-align:center">
+        `<div style="height:100%;width:100%;padding:5px;text-align:center">
           <i onclick="addColumn(${index})" class="fa-solid fa-circle-plus column-add-icon"></i>
         </div>`
       );
@@ -144,7 +166,7 @@ function drawCoordinate(
     .attr('width', 40)
     .attr('height', 30)
     .html(
-      `<div style="height:100%;width:100%;padding:5px;box-sizing:border-box;text-align:center">
+      `<div style="height:100%;width:100%;padding:5px;text-align:center">
         <i onclick="addColumn(${_xLabels.length})" class="fa-solid fa-circle-plus column-add-icon"></i>
       </div>`
     );
@@ -152,8 +174,8 @@ function drawCoordinate(
 }
 
 function drawGraph(_graph, _datum) {
+  _graph.html(null);
   datum.forEach((data) => {
-    _graph.html(null);
     data.values.forEach((value, index, values) => {
       if (index < values.length - 1) {
         _graph
@@ -173,7 +195,11 @@ function drawGraph(_graph, _datum) {
         .attr('width', 50)
         .attr('height', 50)
         .html(
-          `<div style="height:100%;width:100%;background:#33ce33;border-radius:50%"></div>`
+          `<div class="node-wrapper">
+            <div class="node">
+              <i class="fa-solid ${data.type}" style="color:${data.color}"></i>
+            </div>
+          </div>`
         )
         .call(
           d3
