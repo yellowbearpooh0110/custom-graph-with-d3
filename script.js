@@ -5,6 +5,7 @@ const xLabels = ['Emotional Fulfillment', 'Job Satisfaction', 'Flexibility'];
 const yLabels = [undefined, 1, 2, 3, 4, 5, undefined];
 const datum = [
   {
+    title: 'What you want',
     type: 'fa-star',
     values: [5, 4, 4],
     dotted: true,
@@ -12,6 +13,7 @@ const datum = [
     lineColor: '#969696',
   },
   {
+    title: 'What your family wants',
     type: 'fa-heart',
     values: [3, 5, 4],
     dotted: false,
@@ -19,6 +21,7 @@ const datum = [
     lineColor: '#98e6ff',
   },
   {
+    title: 'Some really long key that causes 2 lines',
     type: 'fa-rocket',
     values: [3, 2, 4],
     dotted: true,
@@ -175,11 +178,12 @@ function drawCoordinate(
 
 function drawGraph(_graph, _datum) {
   _graph.html(null);
-  datum.forEach((data) => {
+  _datum.forEach((data, dataIndex) => {
     data.values.forEach((value, index, values) => {
       if (index < values.length - 1) {
         _graph
           .append('line')
+          .attr('id', `line-${dataIndex}-${index}`)
           .attr('x1', deltaWidth * (index + 1))
           .attr('y1', deltaHeight * (dataRange + 1 - value))
           .attr('x2', deltaWidth * (index + 2))
@@ -205,17 +209,27 @@ function drawGraph(_graph, _datum) {
           d3
             .drag()
             .on('drag', function () {
-              d3.select(this).attr('y', event.y - deltaY - 25);
+              const newPosition = Math.min(
+                5,
+                Math.max(1, Math.round((event.y - deltaY) / deltaHeight))
+              );
+              d3.select(this).attr('y', deltaHeight * newPosition - 25);
+              d3.select(this).raise();
+              d3.select(this.parentElement)
+                .select(`#line-${dataIndex}-${index}`)
+                .attr('y1', deltaHeight * newPosition);
+              if (index > 0)
+                d3.select(this.parentElement)
+                  .select(`#line-${dataIndex}-${index - 1}`)
+                  .attr('y2', deltaHeight * newPosition);
             })
             .on('end', function () {
               const newPosition = Math.min(
                 5,
                 Math.max(1, Math.round((event.y - deltaY) / deltaHeight))
               );
-              d3.select(this).attr('y', deltaHeight * newPosition - 25);
               if (values[index] !== 6 - newPosition) {
                 values[index] = 6 - newPosition;
-                drawGraph(_graph, _datum);
               }
             })
         );
@@ -249,12 +263,24 @@ function drawTotal(_dataLength, _datum, _xLabels) {
 
 drawTotal(dataLength, datum, xLabels);
 
-// graph.html(null);
-// console.dir(document.getElementById('chart_area'));
-// foreignObject
-//   .append('div')
-//   .style('height', '100%')
-//   .style('width', '100%')
-// .style('background-color', 'green');
-// .style('box-shadow', '0 2px 5px 1px rgb(64 60 67 / 16%)');
-// xLabels.forEach();
+function drawLegend() {
+  const content = d3.select('#chart_legend > .content');
+  content.html(null);
+  datum.forEach((data) => {
+    const row = content.append('div').attr('class', 'flex');
+    const icon = row.append('div').attr('class', 'icon');
+    icon
+      .append('div')
+      .attr('class', 'line')
+      .style('border-top-color', data.lineColor)
+      .style('border-top-style', data.dotted ? 'dotted' : 'solid');
+    icon
+      .append('i')
+      .attr('class', `fa-solid ${data.type}`)
+      .style('color', data.color);
+    // console.log(row.select('.icon::before').attr('border'));
+    row.append('div').html(data.title);
+  });
+}
+
+drawLegend();
