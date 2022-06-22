@@ -5,7 +5,8 @@ const xLabels = ['Emotional Fulfillment', 'Job Satisfaction', 'Flexibility'];
 const yLabels = [undefined, 1, 2, 3, 4, 5, undefined];
 const datum = [
   {
-    title: 'What you want',
+    label: 'What you want',
+    visible: true,
     type: 'fa-star',
     values: [5, 4, 4],
     dotted: true,
@@ -13,7 +14,8 @@ const datum = [
     lineColor: '#969696',
   },
   {
-    title: 'What your family wants',
+    label: 'What your family wants',
+    visible: true,
     type: 'fa-heart',
     values: [3, 5, 4],
     dotted: false,
@@ -21,7 +23,8 @@ const datum = [
     lineColor: '#98e6ff',
   },
   {
-    title: 'Some really long key that causes 2 lines',
+    label: 'Some really long key that causes 2 lines',
+    visible: true,
     type: 'fa-rocket',
     values: [3, 2, 4],
     dotted: true,
@@ -33,7 +36,8 @@ const margin = { top: 20, right: 30, bottom: 80, left: 30 };
 const deltaY = document.getElementById('chart_area').offsetTop + margin.top;
 const deltaWidth = 200;
 const deltaHeight = 50;
-// append the svg object to the body of the page
+
+var graph;
 
 window.addColumn = function (index) {
   dataLength++;
@@ -82,12 +86,12 @@ function drawXLabels(_labels, _xLabels, _height) {
         `<div style="height:100%;width:100%;padding:5px;">
           <div style="text-align:center">
             <div style="text-align:center;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${xLabel}</div>
-            <i class="fa-solid fa-pen column-button" onclick="enableColumnUpdate(this)"></i>
-            <i class="fa-solid fa-trash-can column-button" onclick="removeColumn(${index})"></i>
+            <i class="fa-solid fa-pen icon-button" onclick="enableColumnUpdate(this)"></i>
+            <i class="fa-solid fa-trash-can icon-button" onclick="removeColumn(${index})"></i>
           </div>
           <div style="text-align:center;display:none;">
             <input style="text-align:center;width:100%;outline:none;border:none;border-bottom:1px solid black;" value="${xLabel}" />
-            <i class="fa-solid fa-check column-button" onclick="updateColumnName(this, ${index})"></i>
+            <i class="fa-solid fa-check icon-button" onclick="updateColumnName(this, ${index})"></i>
           </div>
         </div>`
       );
@@ -184,6 +188,7 @@ function drawGraph(_graph, _datum) {
         _graph
           .append('line')
           .attr('id', `line-${dataIndex}-${index}`)
+          .attr('class', `graph-${dataIndex}`)
           .attr('x1', deltaWidth * (index + 1))
           .attr('y1', deltaHeight * (dataRange + 1 - value))
           .attr('x2', deltaWidth * (index + 2))
@@ -194,6 +199,7 @@ function drawGraph(_graph, _datum) {
       }
       _graph
         .append('foreignObject')
+        .attr('class', `graph-${dataIndex}`)
         .attr('x', deltaWidth * (index + 1) - 25)
         .attr('y', deltaHeight * (dataRange + 1 - value) - 25)
         .attr('width', 50)
@@ -208,13 +214,16 @@ function drawGraph(_graph, _datum) {
         .call(
           d3
             .drag()
+            .on('start', function () {
+              document.body.style.cursor = 'grab';
+            })
             .on('drag', function () {
               const newPosition = Math.min(
                 5,
                 Math.max(1, Math.round((event.y - deltaY) / deltaHeight))
               );
               d3.select(this).attr('y', deltaHeight * newPosition - 25);
-              d3.select(this).raise();
+              _graph.selectAll(`.graph-${dataIndex}`).raise();
               d3.select(this.parentElement)
                 .select(`#line-${dataIndex}-${index}`)
                 .attr('y1', deltaHeight * newPosition);
@@ -224,6 +233,7 @@ function drawGraph(_graph, _datum) {
                   .attr('y2', deltaHeight * newPosition);
             })
             .on('end', function () {
+              document.body.style.cursor = 'default';
               const newPosition = Math.min(
                 5,
                 Math.max(1, Math.round((event.y - deltaY) / deltaHeight))
@@ -255,7 +265,7 @@ function drawTotal(_dataLength, _datum, _xLabels) {
     .attr('stroke', '#cccccc')
     .attr('fill', '#cccccc');
   const labels = svg.append('g');
-  const graph = svg.append('g').attr('stroke', 'grey').attr('fill', 'grey');
+  graph = svg.append('g').attr('stroke', 'grey').attr('fill', 'grey');
 
   drawCoordinate(width, height, coordinate, labels, _xLabels, yLabels);
   drawGraph(graph, _datum);
@@ -263,12 +273,140 @@ function drawTotal(_dataLength, _datum, _xLabels) {
 
 drawTotal(dataLength, datum, xLabels);
 
+window.changeVisiblity = function (elem, index) {
+  if (datum[index].visible) {
+    datum[index].visible = false;
+    d3.select(elem).attr('class', 'fa-solid fa-eye-slash icon-button');
+    graph.selectAll(`.graph-${index}`).style('visibility', 'hidden');
+  } else {
+    datum[index].visible = true;
+    d3.select(elem).attr('class', 'fa-solid fa-eye icon-button');
+    graph.selectAll(`.graph-${index}`).style('visibility', 'visible');
+  }
+};
+
+window.removeData = function (index) {
+  datum.splice(index, 1);
+  drawTotal(dataLength, datum, xLabels);
+  drawLegend();
+};
+
+window.updateData = async function (index) {
+  console.log(datum[index].type);
+  const { value: formValues } = await Swal.fire({
+    title: 'Update data',
+    html: `
+      <div style="display:flex;align-items:center;">
+        <label class="swal2-input-label" style="margin:0 5px;flex-basis:60px;">Label</label>
+        <input id="swal2-input-label" class="swal2-input" style="margin:0 5px;" value="${
+          datum[index].label
+        }">
+      </div>
+      <div style="display:flex;align-items:center;margin-top:10px;">
+        <label class="swal2-input-label" style="margin:0 5px;flex-basis:60px;">Icon</label>
+        <select id="swal2-select-type" class="swal2-select" style="margin:0 5px;">
+          <option value="fa-star"${
+            datum[index].type === 'fa-star' ? ' selected' : ''
+          }>Star</option>
+          <option value="fa-heart"${
+            datum[index].type === 'fa-heart' ? ' selected' : ''
+          }>Heart</option>
+          <option value="fa-rocket"${
+            datum[index].type === 'fa-rocket' ? ' selected' : ''
+          }>Rocket</option>
+        </select>
+        <input id="swal2-input-color" type="color" value="${
+          datum[index].color
+        }">
+      </div>
+      <div style="display:flex;align-items:center;margin-top:10px;">
+        <label class="swal2-input-label" style="margin:0 5px;flex-basis:60px;">Line</label>
+        <label for="swal2-checkbox-dotted" class="swal2-checkbox" style="display:flex;margin:0 5px;">
+          <input id="swal2-checkbox-dotted" type="checkbox"${
+            datum[index].dotted ? ' checked' : ''
+          }>
+          <span class="swal2-label">Dotted</span>
+        </label>
+        <input id="swal2-input-line-color" type="color" value="${
+          datum[index].lineColor
+        }">
+      </div>`,
+    focusConfirm: false,
+    preConfirm: () => {
+      return {
+        label: document.getElementById('swal2-input-label').value,
+        type: document.getElementById('swal2-select-type').value,
+        color: document.getElementById('swal2-input-color').value,
+        dotted: document.getElementById('swal2-checkbox-dotted').checked,
+        lineColor: document.getElementById('swal2-input-line-color').value,
+      };
+    },
+  });
+  Object.assign(datum[index], formValues);
+  drawTotal(dataLength, datum, xLabels);
+  drawLegend();
+};
+
 function drawLegend() {
   const content = d3.select('#chart_legend > .content');
   content.html(null);
-  datum.forEach((data) => {
+  datum.forEach((data, dataIndex) => {
     const row = content.append('div').attr('class', 'flex');
     const icon = row.append('div').attr('class', 'icon');
+    const action = row.append('div').attr('class', 'action');
+    action
+      .append('i')
+      .attr('class', 'fa-solid fa-pencil icon-button')
+      .attr('onclick', `updateData(${dataIndex})`);
+
+    action
+      .append('i')
+      .attr('class', 'fa-solid fa-list-ul icon-button')
+      .style('cursor', 'grab')
+      .call(
+        d3
+          .drag()
+          .on('start', function () {})
+          .on('drag', function () {
+            const children =
+              this.parentElement.parentElement.parentElement.children;
+            var index = 0;
+            var currentIndex = -1;
+            for (index = 0; index < children.length; index++) {
+              if (children[index] === this.parentElement.parentElement)
+                currentIndex = index;
+              if (
+                children[index].offsetTop + children[index].offsetHeight >
+                event.clientY
+              )
+                break;
+            }
+            if (index !== currentIndex) {
+              if (currentIndex >= 0)
+                this.parentElement.parentElement.parentElement.insertBefore(
+                  this.parentElement.parentElement,
+                  children[index + 1]
+                );
+              else
+                this.parentElement.parentElement.parentElement.insertBefore(
+                  this.parentElement.parentElement,
+                  children[index]
+                );
+            }
+          })
+          .on('end', function () {})
+      );
+    action
+      .append('i')
+      .attr(
+        'class',
+        `fa-solid ${data.visible ? 'fa-eye' : 'fa-eye-slash'} icon-button`
+      )
+      .attr('onclick', `changeVisiblity(this, ${dataIndex})`);
+    action
+      .append('i')
+      .attr('class', 'fa-solid fa-trash-can icon-button')
+      .attr('onclick', `removeData(${dataIndex})`);
     icon
       .append('div')
       .attr('class', 'line')
@@ -278,8 +416,7 @@ function drawLegend() {
       .append('i')
       .attr('class', `fa-solid ${data.type}`)
       .style('color', data.color);
-    // console.log(row.select('.icon::before').attr('border'));
-    row.append('div').html(data.title);
+    row.append('div').html(data.label);
   });
 }
 
