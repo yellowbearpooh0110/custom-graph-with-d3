@@ -1,7 +1,7 @@
 // set the dimensions and margins of the graph
 var dataLength = 3;
 const dataRange = 5;
-const xLabels = ['Test1', 'Test2', 'Test3'];
+const xLabels = ['Emotional Fulfillment', 'Job Satisifaction', 'Flexibility'];
 const yLabels = [undefined, 1, 2, 3, 4, 5, undefined];
 const datum = [{ values: [1, 2, 3], dotted: false, lineColor: '#ff9800' }];
 const margin = { top: 20, right: 30, bottom: 80, left: 30 };
@@ -15,6 +15,15 @@ window.addColumn = function (index) {
   xLabels.splice(index, 0, 'New Column');
   datum.forEach((data) => {
     data.values.splice(index, 0, 1);
+  });
+  drawTotal(dataLength, datum, xLabels);
+};
+
+window.removeColumn = function (index) {
+  dataLength--;
+  xLabels.splice(index, 1);
+  datum.forEach((data) => {
+    data.values.splice(index, 1);
   });
   drawTotal(dataLength, datum, xLabels);
 };
@@ -47,9 +56,9 @@ function drawXLabels(_labels, _xLabels, _height) {
       .html(
         `<div style="height:100%;width:100%;padding:5px;box-sizing:border-box;">
           <div style="text-align:center">
-            <div style="text-align:center">${xLabel}</div>
+            <div style="text-align:center;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${xLabel}</div>
             <i class="fa-solid fa-pen column-button" onclick="enableColumnUpdate(this)"></i>
-            <i class="fa-solid fa-trash-can column-button"></i>
+            <i class="fa-solid fa-trash-can column-button" onclick="removeColumn(${index})"></i>
           </div>
           <div style="text-align:center;display:none;">
             <input style="text-align:center;width:100%;box-sizing:border-box;outline:none;border:none;border-bottom:1px solid black;" value="${xLabel}" />
