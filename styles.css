@@ -1,0 +1,23 @@
+/* .container {
+  max-width: 800px;
+} */
+.column-add-icon {
+  color: #55d762;
+  cursor: pointer;
+  transition: all ease 0.3s;
+}
+
+.column-add-icon:hover {
+  transform: translateY(2px);
+}
+
+.column-button {
+  margin: 5px 5px 0 5px;
+  color: #dedede;
+  cursor: pointer;
+  transition: all ease 0.3s;
+}
+
+.column-button:hover {
+  color: #000000;
+}
