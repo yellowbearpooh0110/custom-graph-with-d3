@@ -57,7 +57,23 @@ window.removeColumn = function (index) {
   drawTotal(dataLength, datum, xLabels);
 };
 
-window.enableColumnUpdate = function (elem) {
+window.enableTitleUpdate = function (elem) {
+  elem.parentElement.style.display = 'none';
+  elem.parentElement.nextElementSibling.style.display = 'flex';
+  elem.parentElement.nextElementSibling.firstElementChild.focus();
+  elem.parentElement.nextElementSibling.firstElementChild.selectionStart =
+    elem.parentElement.nextElementSibling.firstElementChild.value.length;
+};
+
+window.updateTitle = function (elem) {
+  const newLabel = elem.parentElement.firstElementChild.value;
+  elem.parentElement.style.display = 'none';
+  elem.parentElement.previousElementSibling.style.display = 'flex';
+  elem.parentElement.previousElementSibling.firstElementChild.innerHTML =
+    newLabel;
+};
+
+window.enableXLabelUpdate = function (elem) {
   elem.parentElement.style.display = 'none';
   elem.parentElement.nextElementSibling.style.display = 'block';
   elem.parentElement.nextElementSibling.firstElementChild.focus();
@@ -65,7 +81,7 @@ window.enableColumnUpdate = function (elem) {
     elem.parentElement.nextElementSibling.firstElementChild.value.length;
 };
 
-window.updateColumnName = function (elem, index) {
+window.updateXLabel = function (elem, index) {
   const newLabel = elem.parentElement.firstElementChild.value;
   elem.parentElement.style.display = 'none';
   elem.parentElement.previousElementSibling.style.display = 'block';
@@ -86,12 +102,12 @@ function drawXLabels(_labels, _xLabels, _height) {
         `<div style="height:100%;width:100%;padding:5px;">
           <div style="text-align:center">
             <div style="text-align:center;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${xLabel}</div>
-            <i class="fa-solid fa-pen icon-button" onclick="enableColumnUpdate(this)"></i>
+            <i class="fa-solid fa-pen icon-button" onclick="enableXLabelUpdate(this)"></i>
             <i class="fa-solid fa-trash-can icon-button" onclick="removeColumn(${index})"></i>
           </div>
           <div style="text-align:center;display:none;">
             <input style="text-align:center;width:100%;outline:none;border:none;border-bottom:1px solid black;" value="${xLabel}" />
-            <i class="fa-solid fa-check icon-button" onclick="updateColumnName(this, ${index})"></i>
+            <i class="fa-solid fa-check icon-button" onclick="updateXLabel(this, ${index})"></i>
           </div>
         </div>`
       );
@@ -195,7 +211,8 @@ function drawGraph(_graph, _datum) {
           .attr('y2', deltaHeight * (dataRange + 1 - values[index + 1]))
           .attr('stroke', data.lineColor)
           .attr('stroke-dasharray', data.dotted ? '5,5' : undefined)
-          .attr('stroke-width', 2);
+          .attr('stroke-width', 2)
+          .style('visibility', data.visible ? 'visible' : 'hidden');
       }
       _graph
         .append('foreignObject')
@@ -211,6 +228,7 @@ function drawGraph(_graph, _datum) {
             </div>
           </div>`
         )
+        .style('visibility', data.visible ? 'visible' : 'hidden')
         .call(
           d3
             .drag()
@@ -291,8 +309,52 @@ window.removeData = function (index) {
   drawLegend();
 };
 
+window.addData = async function (index) {
+  const { value: formValues } = await Swal.fire({
+    title: 'Add data',
+    html: `
+      <div style="display:flex;align-items:center;">
+        <label class="swal2-input-label" style="margin:0 5px;flex-basis:60px;">Label</label>
+        <input id="swal2-input-label" class="swal2-input" style="margin:0 5px;" value="Label">
+      </div>
+      <div style="display:flex;align-items:center;margin-top:10px;">
+        <label class="swal2-input-label" style="margin:0 5px;flex-basis:60px;">Icon</label>
+        <select id="swal2-select-type" class="swal2-select" style="margin:0 5px;">
+          <option value="fa-star">Star</option>
+          <option value="fa-heart">Heart</option>
+          <option value="fa-rocket">Rocket</option>
+        </select>
+        <input id="swal2-input-color" type="color">
+      </div>
+      <div style="display:flex;align-items:center;margin-top:10px;">
+        <label class="swal2-input-label" style="margin:0 5px;flex-basis:60px;">Line</label>
+        <label for="swal2-checkbox-dotted" class="swal2-checkbox" style="display:flex;margin:0 5px;">
+          <input id="swal2-checkbox-dotted" type="checkbox">
+          <span class="swal2-label">Dotted</span>
+        </label>
+        <input id="swal2-input-line-color" type="color">
+      </div>`,
+    focusConfirm: false,
+    preConfirm: () => {
+      return {
+        label: document.getElementById('swal2-input-label').value,
+        type: document.getElementById('swal2-select-type').value,
+        color: document.getElementById('swal2-input-color').value,
+        dotted: document.getElementById('swal2-checkbox-dotted').checked,
+        lineColor: document.getElementById('swal2-input-line-color').value,
+      };
+    },
+  });
+  datum.push({
+    ...formValues,
+    visible: true,
+    values: Array.from({ length: dataLength }, () => 1),
+  });
+  drawTotal(dataLength, datum, xLabels);
+  drawLegend();
+};
+
 window.updateData = async function (index) {
-  console.log(datum[index].type);
   const { value: formValues } = await Swal.fire({
     title: 'Update data',
     html: `
@@ -351,7 +413,7 @@ function drawLegend() {
   const content = d3.select('#chart_legend > .content');
   content.html(null);
   datum.forEach((data, dataIndex) => {
-    const row = content.append('div').attr('class', 'flex');
+    const row = content.append('div').attr('class', 'flex-row');
     const icon = row.append('div').attr('class', 'icon');
     const action = row.append('div').attr('class', 'action');
     action

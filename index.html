@@ -15,10 +15,26 @@
     />
   </head>
   <body>
-    <div id="chart_area"></div>
-    <div id="chart_legend">
-      <h2>Legend</h2>
-      <div class="content"></div>
+    <div class="title-flex">
+      <h1>Title</h1>
+      <i
+        class="fa-solid fa-pencil icon-button"
+        onclick="enableTitleUpdate(this)"
+      ></i>
+    </div>
+    <div class="title-flex" style="display: none">
+      <input value="Title" />
+      <i class="fa-solid fa-check icon-button" onclick="updateTitle(this)"></i>
+    </div>
+    <div class="main-content">
+      <div id="chart_area"></div>
+      <div id="chart_legend">
+        <div class="legend-flex">
+          <h2>Legend</h2>
+          <i class="fa-solid fa-plus icon-button" onclick="addData()"></i>
+        </div>
+        <div class="content"></div>
+      </div>
     </div>
   </body>
   <script src="https://d3js.org/d3.v4.js"></script>
