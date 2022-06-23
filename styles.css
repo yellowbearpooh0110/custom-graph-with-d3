@@ -56,6 +56,18 @@ body {
   opacity: 1;
 }
 
+.circle-plus {
+  opacity: 0;
+}
+
+.circle-plus:hover {
+  opacity: 1;
+}
+
+.circle-plus.show {
+  opacity: 1;
+}
+
 .column-add-icon {
   color: #55d762;
   cursor: pointer;

@@ -74,11 +74,11 @@ window.updateTitle = function (elem) {
 };
 
 window.enableXLabelUpdate = function (elem) {
-  elem.parentElement.style.display = 'none';
-  elem.parentElement.nextElementSibling.style.display = 'block';
-  elem.parentElement.nextElementSibling.firstElementChild.focus();
-  elem.parentElement.nextElementSibling.firstElementChild.selectionStart =
-    elem.parentElement.nextElementSibling.firstElementChild.value.length;
+  elem.parentElement.parentElement.style.display = 'none';
+  elem.parentElement.parentElement.nextElementSibling.style.display = 'block';
+  elem.parentElement.parentElement.nextElementSibling.firstElementChild.focus();
+  elem.parentElement.parentElement.nextElementSibling.firstElementChild.selectionStart =
+    elem.parentElement.parentElement.nextElementSibling.firstElementChild.value.length;
 };
 
 window.updateXLabel = function (elem, index) {
@@ -94,10 +94,24 @@ function drawXLabels(_labels, _xLabels, _height) {
   _xLabels.forEach((xLabel, index) => {
     _labels
       .append('foreignObject')
-      .attr('x', deltaWidth * (index + 1) - 70)
+      .attr('x', deltaWidth * (index + 1) - 80)
       .attr('y', _height + 15)
-      .attr('width', 140)
+      .attr('width', 160)
       .attr('height', 100)
+      .on('mouseenter', function () {
+        document.getElementById(`circle-plus-${index}`).classList.add('show');
+        document
+          .getElementById(`circle-plus-${index + 1}`)
+          .classList.add('show');
+      })
+      .on('mouseleave', function () {
+        document
+          .getElementById(`circle-plus-${index}`)
+          .classList.remove('show');
+        document
+          .getElementById(`circle-plus-${index + 1}`)
+          .classList.remove('show');
+      })
       .html(
         `<div style="height:100%;width:100%;padding:5px;">
           <div class="y-label-staic">
@@ -108,7 +122,7 @@ function drawXLabels(_labels, _xLabels, _height) {
             </span>
           </div>
           <div style="text-align:center;display:none;">
-            <input style="text-align:center;width:100%;outline:none;border:none;border-bottom:1px solid black;" value="${xLabel}" />
+            <input style="text-align:center;width:100%;outline:none;border:none;border-bottom:1px solid black;display:block;" value="${xLabel}" />
             <i class="fa-solid fa-check icon-button" onclick="updateXLabel(this, ${index})"></i>
           </div>
         </div>`
@@ -175,6 +189,8 @@ function drawCoordinate(
       .attr('y2', _height);
     _coordinate
       .append('foreignObject')
+      .attr('id', `circle-plus-${index}`)
+      .attr('class', 'circle-plus')
       .attr('x', deltaWidth * (index + 0.5) - 20)
       .attr('y', _height + 15)
       .attr('width', 40)
@@ -187,6 +203,8 @@ function drawCoordinate(
   });
   _coordinate
     .append('foreignObject')
+    .attr('id', `circle-plus-${_xLabels.length}`)
+    .attr('class', 'circle-plus')
     .attr('x', deltaWidth * (_xLabels.length + 0.5) - 20)
     .attr('y', _height + 15)
     .attr('width', 40)
