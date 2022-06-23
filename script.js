@@ -100,10 +100,12 @@ function drawXLabels(_labels, _xLabels, _height) {
       .attr('height', 100)
       .html(
         `<div style="height:100%;width:100%;padding:5px;">
-          <div style="text-align:center">
+          <div class="y-label-staic">
             <div style="text-align:center;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${xLabel}</div>
-            <i class="fa-solid fa-pen icon-button" onclick="enableXLabelUpdate(this)"></i>
-            <i class="fa-solid fa-trash-can icon-button" onclick="removeColumn(${index})"></i>
+            <span>
+              <i class="fa-solid fa-pen icon-button" onclick="enableXLabelUpdate(this)"></i>
+              <i class="fa-solid fa-trash-can icon-button" onclick="removeColumn(${index})"></i>
+            </span>
           </div>
           <div style="text-align:center;display:none;">
             <input style="text-align:center;width:100%;outline:none;border:none;border-bottom:1px solid black;" value="${xLabel}" />
@@ -119,6 +121,7 @@ function drawCoordinate(
   _height,
   _coordinate,
   _labels,
+  _yLabelSvg,
   _xLabels,
   _yLabels
 ) {
@@ -142,7 +145,7 @@ function drawCoordinate(
       .attr('y1', deltaHeight * (dataRange + 1 - index))
       .attr('x2', _width)
       .attr('y2', deltaHeight * (dataRange + 1 - index));
-    _coordinate
+    _yLabelSvg
       .append('text')
       .attr('x', -15)
       .attr('y', deltaHeight * (dataRange + 1 - index))
@@ -270,12 +273,25 @@ function drawTotal(_dataLength, _datum, _xLabels) {
   const height = deltaHeight * (dataRange + 1);
   const svgWidth = width + margin.left + margin.right;
   const svgHeight = height + margin.top + margin.bottom;
-  d3.select('#chart_area svg').remove();
+  d3.selectAll('#chart_area svg').remove();
+  const yLabelSvg = d3
+    .select('#chart_area')
+    .append('svg')
+    .attr('width', 20)
+    .attr('height', svgHeight)
+    .style('display', 'inline')
+    .style('background-color', '#ffffff')
+    .style('position', 'fixed')
+    .append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+    .attr('stroke', '#cccccc')
+    .attr('fill', '#cccccc');
   const svg = d3
     .select('#chart_area')
     .append('svg')
     .attr('width', svgWidth)
     .attr('height', svgHeight)
+    .style('display', 'inline')
     .append('g')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
   const coordinate = svg
@@ -285,7 +301,15 @@ function drawTotal(_dataLength, _datum, _xLabels) {
   const labels = svg.append('g');
   graph = svg.append('g').attr('stroke', 'grey').attr('fill', 'grey');
 
-  drawCoordinate(width, height, coordinate, labels, _xLabels, yLabels);
+  drawCoordinate(
+    width,
+    height,
+    coordinate,
+    labels,
+    yLabelSvg,
+    _xLabels,
+    yLabels
+  );
   drawGraph(graph, _datum);
 }
 
@@ -428,7 +452,9 @@ function drawLegend() {
       .call(
         d3
           .drag()
-          .on('start', function () {})
+          .on('start', function () {
+            this.parentElement.classList.add('dragging');
+          })
           .on('drag', function () {
             const children =
               this.parentElement.parentElement.parentElement.children;
@@ -456,7 +482,9 @@ function drawLegend() {
                 );
             }
           })
-          .on('end', function () {})
+          .on('end', function () {
+            this.parentElement.classList.remove('dragging');
+          })
       );
     action
       .append('i')

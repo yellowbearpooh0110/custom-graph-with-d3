@@ -15,6 +15,7 @@ body {
 
 #chart_area {
   max-width: 1000px;
+  white-space: nowrap;
   overflow: auto;
 }
 
@@ -39,6 +40,20 @@ body {
   align-items: center;
   justify-content: center;
   cursor: grab;
+}
+
+.y-label-staic {
+  text-align: center;
+}
+
+.y-label-staic > *:first-child + * {
+  opacity: 0;
+  transition: all ease 0.3s;
+}
+
+.y-label-staic > *:first-child:hover + *,
+.y-label-staic > *:first-child + *:hover {
+  opacity: 1;
 }
 
 .column-add-icon {
@@ -111,18 +126,36 @@ body {
   position: relative;
 }
 
-.action {
+.flex-row .action {
   position: absolute;
   color: #dedede;
   left: calc(100% + 10px);
   width: fit-content;
   top: 50%;
   transform: translateY(-50%);
+  opacity: 0;
+}
+
+.flex-row:hover > .action {
+  opacity: 1;
+}
+
+.flex-row > .action.dragging {
+  opacity: 1;
 }
 
 .title-flex {
   display: flex;
   align-items: center;
+}
+
+.title-flex > h1 + i {
+  opacity: 0;
+}
+
+.title-flex > h1:hover + i,
+.title-flex > h1 + i:hover {
+  opacity: 1;
 }
 
 .title-flex input {
